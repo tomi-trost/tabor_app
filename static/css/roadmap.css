@@ -1,0 +1,96 @@
+﻿* {
+    /* border: 3px solid black; */
+    box-sizing: border-box;
+}
+
+html, body, #main-container {
+    height: 100%;
+    margin: 0;
+}
+
+button {
+
+    position: absolute;
+    border: none;
+    border-radius: 10px;
+    font-size: 2.5vh;
+
+}
+
+button:hover {
+    background-color: rgb(226, 226, 226);
+}
+
+
+#date span {
+    font-weight: bold;
+}
+#date span, p{
+    display: inline-block;
+}
+
+#main-container {
+    
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+    height: 100%;
+
+    margin: auto;
+    border-color: green;
+}
+
+#text-container {
+
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+
+    width: 100%;
+    height: auto;
+
+    padding: 30px;
+    grid-area: text;
+}
+
+#canvas-container {
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    
+    grid-area: canvas;
+}
+#roadmap-canvas {
+
+    height: 100%;
+    border: 1px solid black;
+    
+}
+
+@media only screen and (min-width: 768px) {
+    
+    #main-container {
+        width: 70%;
+    }
+
+}
+
+
+@media only screen and (min-width: 1200px) {
+    
+    #main-container {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 25% 75%;
+        grid-template-areas: 'text canvas';
+    }
+
+    #canvas-container {
+        padding-bottom: 0;
+    }
+}
