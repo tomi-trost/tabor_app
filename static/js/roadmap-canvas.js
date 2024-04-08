@@ -1,4 +1,11 @@
-﻿const canvas = document.querySelector('#roadmap-canvas');
+﻿import { ImageLoader } from "./utils/ImageLoader.js";
+import { Node } from "./utils/Node.js";
+import { Position } from "./utils/Position.js";
+import { Size } from "./utils/Size.js";
+import { Tooltip } from "./utils/Tooltip.js";
+
+
+const canvas = document.querySelector('#roadmap-canvas');
 const ctx = canvas.getContext('2d');
 
 // Set canvas width and height to ensure correct 
@@ -37,71 +44,38 @@ loadIconsAndInitialize(iconUrls, isPhone);
 
 async function loadIconsAndInitialize(iconUrls, isPhone) {
 
-    const icons = await bufferImages(iconUrls, isPhone);
+    const imageLoader = new ImageLoader({deviceIsPhone: isPhone});
+    const icons = await imageLoader.bufferImages(iconUrls, isPhone);
 
     const addIcon = icons['add'];
+    const iconSize = new Size({
+        width: addIcon.width,
+        height: addIcon.height
+    })
 
-    let addButton = {
+    const addButton = new Node({
         name: "add",
         type: "add-btn",
-        position: {
+        position: new Position({
             x: (width - addIcon.width)/2,
             y: (height - addIcon.height)/2
-        },
-        size: {
-            width: addIcon.width,
-            height: addIcon.height
-        }, 
-        tooltip: document.createElement('div')
-    }
+        }),
+        size: iconSize, 
+        tooltip: new Tooltip({
+            message: "Create a new roadmap node.",
+            canvasRect: canvasRect,
+            parentSize: iconSize
+        })
+    });
 
-    const tooltip = addButton.tooltip;
-    tooltip.style.position = 'absolute';
-    tooltip.style.border = '1px solid black';
-    tooltip.style.display = 'none';
-    tooltip.textContent = "Create a new roadmap node.";
-    tooltip.style.textAlign = 'center';
-    tooltip.style.fontStyle = 'italic';
-    tooltip.style.padding = '5px';
-
-    document.querySelector('#main-container').appendChild(tooltip);
     canvasElements.push(addButton);
     drawEmptyRoadmap(icons);
 }
-
-
-async function bufferImages(images, isPhone) {
-    
-    const loadedImages = await Promise.all(images.map(async image => {
-        const url = isPhone ? (image.phone.url || image.other.url) : image.other.url;
-        const loadedImage = await loadImage(url);
-        return ({ name: image.name, img: loadedImage});
-    }));
-
-    const buffer = {};
-    loadedImages.forEach(({ name, img }) => {
-        buffer[name] = img;
-    });
-
-    return buffer;
-}
-
-
-function loadImage(url) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = url;
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-    });
-}
-
 
 function drawEmptyRoadmap(icons) {
     const addIcon = icons['add'];
     ctx.drawImage(addIcon, (width - addIcon.width)/2, (height - addIcon.height)/2);
 } 
-
 
 function possitionUpDownButtons() {
     
@@ -155,8 +129,9 @@ function handleCanvasClick(event) {
 
     const click = getMousePosition(event);
 
-    canvasElements.forEach(element => {
-        if (collisionAABB(element, click)) {
+    canvasElements.forEach(node => {
+        console.log(collisionAABB(node, click));
+        if (collisionAABB(node, click)) {
 
         }
     });
@@ -166,34 +141,22 @@ function handleCanvasHover(event) {
 
     const mousePosition = getMousePosition(event);
 
-    canvasElements.forEach(element => {
-        if (collisionAABB(element, mousePosition)) {
-            showTooltip(element, mousePosition);
+    canvasElements.forEach(node => {
+        if (collisionAABB(node, mousePosition)) {
+            node.tooltip.show(mousePosition);
         } else {
-            hideTooltip(element);
+            node.tooltip.hide();
         }
     });
 }
 
-function showTooltip(element, mousePosition) {
-    element.tooltip.style.display = 'block';
-    element.tooltip.style.top = `${canvasRect.top + mousePosition.y - element.size.height}px`;
-    element.tooltip.style.left = `${canvasRect.left + mousePosition.x}px`;
-    element.tooltip.style.transform = 'translate(-50%, 0)';
-
-}
-
-function hideTooltip(element) {
-    element.tooltip.style.display = 'none';
-}
-
 function getMousePosition(event) {
-    return {x: event.offsetX, y: event.offsetY};
+    return new Position({x: event.offsetX, y: event.offsetY});
 }
 
-function collisionAABB(element, click) {
-    if (click.x > element.position.x - element.size.width && click.x < element.position.x + element.size.width &&
-        click.y > element.position.y - element.size.height && click.y < element.position.y + element.size.height)
+function collisionAABB(element, mouse) {
+    if (mouse.x > element.position.x && mouse.x < element.position.x + element.size.width &&
+        mouse.y > element.position.y && mouse.y < element.position.y + element.size.height)
     {
         return true;
     }

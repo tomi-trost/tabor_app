@@ -1,16 +1,18 @@
-﻿import { Position } from './Position';
-import { Size } from './Size';
-import { Tooltip } from './Tooltip';
+﻿import { Position } from './Position.js';
+import { Size } from './Size.js';
+import { Tooltip } from './Tooltip.js';
 
 export class Node {
 
     constructor({
         name = '',
-        type = None,
+        type = null,
         position = new Position(),
         size = new Size(),
         tooltip = new Tooltip(),
-        icon = new Image(),
+        icon = null,
+        children = [],
+        parent = null
     } = {}) {
         this.name = name;
         this.type = type;
@@ -18,6 +20,8 @@ export class Node {
         this.size = size;
         this.tooltip = tooltip;
         this.icon = icon;
+        this.children = children;
+        this.parent = parent;
     }
 
 }
