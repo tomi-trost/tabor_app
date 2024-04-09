@@ -1,9 +1,26 @@
-﻿import { ImageLoader } from "./utils/ImageLoader.js";
-import { Node } from "./utils/Node.js";
-import { Position } from "./utils/Position.js";
-import { Size } from "./utils/Size.js";
-import { Tooltip } from "./utils/Tooltip.js";
+﻿import { ImageLoader } from "./utils/roadmap/ImageLoader.js";
+import { Node } from "./utils/roadmap/Node.js";
+import { Position } from "./utils/roadmap/Position.js";
+import { Size } from "./utils/roadmap/Size.js";
+import { Tooltip } from "./utils/roadmap/Tooltip.js";
+import { Element } from "./utils/roadmap/Element.js";
+import { Icon } from "./utils/roadmap/Icon.js";
+import { Draw } from "./utils/roadmap/Draw.js";
+import { 
+    canvasClickHandler,
+    canvasMoveHandler,
+    leftButtonClickHandler,
+    rightButtonClickHandler,
+    upButtonClickHandler,
+    downButtonClickHandler,
+    formSubmitClickHandler,
+    formCancelClickHandler
 
+} from "./utils/roadmap/EventHandlers.js";
+
+const dateP = document.querySelector('#date p');
+const date = formatDate(new Date());
+dateP.innerHTML = date;
 
 const canvas = document.querySelector('#roadmap-canvas');
 const ctx = canvas.getContext('2d');
@@ -11,7 +28,7 @@ const ctx = canvas.getContext('2d');
 // Set canvas width and height to ensure correct 
 // drawing.
 const canvasRect = canvas.getBoundingClientRect();
-const { width, height } = getCanvasDimensions();
+const {width, height} = {width: canvasRect.width, height: canvasRect.height};
 canvas.width = width;
 canvas.height = height - 1;
 
@@ -20,9 +37,6 @@ const isPhone = width < 500;
 
 // Detect display orientation.
 const upDownOrientation = height > width;
-if (upDownOrientation)  { possitionUpDownButtons(); } 
-else                    { possitionLeftRightButtons(); }
-
 
 const iconUrls = [
     {
@@ -38,8 +52,13 @@ const iconUrls = [
     },
 ];
 
+const nodeTree = new Node({name: 'root'});
+const drawer = new Draw({
+    canvas: canvas,
+    ctx: ctx, 
+    scene: nodeTree
+});
 
-let canvasElements = [];
 loadIconsAndInitialize(iconUrls, isPhone);
 
 async function loadIconsAndInitialize(iconUrls, isPhone) {
@@ -48,148 +67,98 @@ async function loadIconsAndInitialize(iconUrls, isPhone) {
     const icons = await imageLoader.bufferImages(iconUrls, isPhone);
 
     const addIcon = icons['add'];
+
+    const icon = new Icon({image: addIcon});
     const iconSize = new Size({
         width: addIcon.width,
         height: addIcon.height
-    })
-
-    const addButton = new Node({
-        name: "add",
-        type: "add-btn",
+    });
+    const addButtonElement = new Element({
         position: new Position({
             x: (width - addIcon.width)/2,
             y: (height - addIcon.height)/2
         }),
         size: iconSize, 
-        tooltip: new Tooltip({
-            message: "Create a new roadmap node.",
-            canvasRect: canvasRect,
-            parentSize: iconSize
-        })
+    });
+    const tooltip = new Tooltip({
+        message: "Create a new roadmap node.",
+        canvasRect: canvasRect,
+        parentSize: iconSize
     });
 
-    canvasElements.push(addButton);
-    drawEmptyRoadmap(icons);
+    nodeTree.addChild(new Node({
+        name: "add-btn",
+        components: [addButtonElement, tooltip, icon]
+    }));
+
+    drawer.drawScene();
 }
 
-function drawEmptyRoadmap(icons) {
-    const addIcon = icons['add'];
-    ctx.drawImage(addIcon, (width - addIcon.width)/2, (height - addIcon.height)/2);
-} 
-
-function possitionUpDownButtons() {
+function formatDate(date) {
+    const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
     
-    const backButton = document.getElementById('back-btn');
-    const forwardButton = document.getElementById('forward-btn');
-
-    backButton.style.top = '30px';
-    backButton.style.left = '50%';
-    backButton.style.transform = 'translate(-50%, 0)';
-    backButton.textContent = '⇧';
-
-    forwardButton.style.bottom = '30px';
-    forwardButton.style.left = '50%';
-    forwardButton.style.transform = 'translate(-50%, 0)';
-    forwardButton.textContent = '⇩';
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    
+    return `${day}. ${month} ${year}`;
 }
-
-function possitionLeftRightButtons() {
-
-    const backButton = document.getElementById('back-btn');
-    const forwardButton = document.getElementById('forward-btn');
-
-    backButton.style.left = '30px';
-    backButton.style.top = '50%';
-    backButton.style.transform = 'translate(0, -50%)';
-    backButton.textContent = '⇦';
-
-    forwardButton.style.right = '30px'
-    forwardButton.style.top = '50%'; 
-    forwardButton.style.transform = 'translate(0, -50%)';
-    forwardButton.textContent = '⇨';
-
-}
-
-function getCanvasDimensions() {
-    const canvasWidth = canvas.clientWidth;
-    const canvasHeight = canvas.clientHeight;
-
-    return { width: canvasWidth, height: canvasHeight };
-}
-
-function addDot(x, y, radius, color) {
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.closePath();
-}
-
-function handleCanvasClick(event) {
-
-    const click = getMousePosition(event);
-
-    canvasElements.forEach(node => {
-        console.log(collisionAABB(node, click));
-        if (collisionAABB(node, click)) {
-
-        }
-    });
-}
-
-function handleCanvasHover(event) {
-
-    const mousePosition = getMousePosition(event);
-
-    canvasElements.forEach(node => {
-        if (collisionAABB(node, mousePosition)) {
-            node.tooltip.show(mousePosition);
-        } else {
-            node.tooltip.hide();
-        }
-    });
-}
-
-function getMousePosition(event) {
-    return new Position({x: event.offsetX, y: event.offsetY});
-}
-
-function collisionAABB(element, mouse) {
-    if (mouse.x > element.position.x && mouse.x < element.position.x + element.size.width &&
-        mouse.y > element.position.y && mouse.y < element.position.y + element.size.height)
-    {
-        return true;
-    }
-    return false;
-}
-
-function isClickedEucledian(element, click) {}
 
 canvas.addEventListener('mousedown', (e) => {
-    handleCanvasClick(e);
+    canvasClickHandler(e, nodeTree, canvasRect);
 });
 
 canvas.addEventListener('mousemove', (e) => {
-    handleCanvasHover(e);
+    canvasMoveHandler(e, nodeTree);
+});
+
+document.querySelector('#left-btn').addEventListener('mousedown', (e) => {
+    leftButtonClickHandler(e, nodeTree);
+    drawer.drawScene();
+});
+
+document.querySelector('#right-btn').addEventListener('mousedown', (e) => {
+    rightButtonClickHandler(e, nodeTree);
+    drawer.drawScene();
+});
+
+document.querySelector('#up-btn').addEventListener('mousedown', (e) => {
+    upButtonClickHandler(e, nodeTree);
+    drawer.drawScene();
+});
+
+document.querySelector('#down-btn').addEventListener('mousedown', (e) => {
+    downButtonClickHandler(e, nodeTree);
+    drawer.drawScene();
+});
+
+document.querySelector('#new-element-form').addEventListener('submit', (e) => {
+    formSubmitClickHandler(e, nodeTree, canvasRect);
+    drawer.drawScene();
+});
+
+document.querySelector('#new-element-form').addEventListener('reset', (e) => {
+    formCancelClickHandler(e);
 });
 
 
-// // Automatic resizing
-// let resizeTimeout;
-// window.addEventListener('resize', () => {
-//     clearTimeout(resizeTimeout);
-//     resizeTimeout = setTimeout(() => {
+// Automatic resizing
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
         
-    
-//         const { width, height } = getCanvasDimensions();
-//         canvas.width = width;
-//         // [!remove] -1 prevents overflow becouse it
-//         // gives the canvas 1px of space for its border.
-//         canvas.height = height - 1;
+        const canvasRect = canvas.getBoundingClientRect();
+        const {width, height} = {width: canvasRect.width, height: canvasRect.height};
+        canvas.width = width;
+        // [!remove] -1 prevents overflow becouse it
+        // gives the canvas 1px of space for its border.
+        canvas.height = height - 1;
 
-//         const upDownOrientation = height > width;
-//         if (upDownOrientation)  { possitionUpDownButtons(); } 
-//         else                    { possitionLeftRightButtons(); }
+        const upDownOrientation = height > width;
+        if (upDownOrientation)  { possitionUpDownButtons(); } 
+        else                    { possitionLeftRightButtons(); }
 
-//     }, );
-// }); 
+        // drawer.drawScene();
+    }, );
+}); 

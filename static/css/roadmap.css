@@ -8,19 +8,91 @@ html, body, #main-container {
     margin: 0;
 }
 
-button {
+#form-container {
+
+    display: none;
+    background-color: white;
+    box-shadow: 2px 2px 10px rgb(238, 210, 174);
+    padding: 5px 5px 10px 5px;
+    border-radius: 5px;
+    position: absolute;
+    width: 300px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+}
+#new-element-form {   
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin: auto;
+}
+#new-element-form label {
+    margin-top: 5px;
+    font-size: 14px;
+}
+#new-element-form input {
+    border: 1px solid rgb(176, 176, 176);
+    margin-bottom: 5px;
+    padding: 5px 5px 5px 10px;
+    outline: none;
+}
+#new-element-form input:focus {
+    border: 1px solid rgb(81, 81, 81);
+}
+#form-buttons {
+    margin-top: 10px;
+}
+#element-description {
+    border: 1px solid rgb(130, 130, 130);
+    resize: none;
+    outline: none;
+    padding: 10px 5px 5px 10px;
+}
+#element-description {
+    border: 1px solid  rgb(81, 81, 81);
+}
+legend {
+    font-weight: bold;
+}
+fieldset {
+    border-radius: 5px;
+}
+
+
+#canvas-container > button {
 
     position: absolute;
     border: none;
     border-radius: 10px;
     font-size: 2.5vh;
+    background-color: transparent;
 
 }
-
-button:hover {
+#canvas-container > button:hover {
     background-color: rgb(226, 226, 226);
 }
-
+#left-btn {
+    left: 30px;
+    top: 50%;
+    transform: translate(0, -50%);
+}
+#right-btn {
+    right: 30px;
+    top: 50%;
+    transform: translate(0, -50%);
+}
+#up-btn {
+    top: 30px;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+#down-btn {
+    bottom: 30px;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
 
 #date span {
     font-weight: bold;

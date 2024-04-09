@@ -5,4 +5,8 @@
     } = {}) {
         this.image = image;
     }
+
+    clone() {
+        
+    }
 }
